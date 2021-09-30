@@ -17,5 +17,5 @@ struct Node
     uint16_t leafindex;
     std::vector<Node *> children;
     Node *parent;
-    Node(NodeType t, uint16_t from, uint16_t to) : type(t), label(from, to), parent(nullptr) {}
+    Node(NodeType t, uint16_t from, uint16_t *to) : type(t), label(from, *to), parent(nullptr) {}
 };
