@@ -42,8 +42,9 @@ void write_file(const std::string &filename, std::unordered_map<uint16_t, uint16
     {
         for (const auto &[key, value] : dists)
         {
-            file << key << " " << value << "\n";
+            file << key << ' ' << value << '\n';
         }
         file.close();
     }
+    std::cout << "Successfully wrote distributions to file!\n";
 }
