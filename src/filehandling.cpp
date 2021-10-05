@@ -33,7 +33,7 @@ std::unordered_map<uint16_t, uint16_t> vec_to_dict(std::vector<uint16_t> seqs)
     return distribution;
 }
 
-void write_file(const std::string &filename, std::unordered_map<uint16_t, uint16_t> dists)
+void write_dists_to_file(const std::string &filename, std::unordered_map<uint16_t, uint16_t> dists)
 {
     std::string input;
     std::ofstream file(filename);
