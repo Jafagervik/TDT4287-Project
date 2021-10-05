@@ -14,7 +14,7 @@ struct Node
 {
     NodeType type;
     std::pair<uint16_t, uint16_t> label;
-    uint16_t leafindex;
+    uint16_t leaf_index;
     std::vector<Node *> children;
     Node *parent;
     Node(NodeType t, uint16_t from, uint16_t *to) : type(t), label(from, *to), parent(nullptr) {}
