@@ -1,6 +1,6 @@
 #include "../include/filehandling.hpp"
 
-void read_file(const std::string &filename)
+std::vector<std::string> read_file(const std::string &filename)
 {
     std::vector<std::string> dna_sequences;
     std::string line;
@@ -15,6 +15,7 @@ void read_file(const std::string &filename)
     }
 
     std::cout << "Number of sequences in file: " << dna_sequences.size() << "\n";
+    return dna_sequences;
 }
 
 void write_file(const std::string_view &filename)

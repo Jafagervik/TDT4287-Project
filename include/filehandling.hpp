@@ -5,5 +5,5 @@
 #include <vector>
 #include <stdint.h>
 
-void read_file(const std::string &filename);
+std::vector<std::string> read_file(const std::string &filename);
 void write_file(const std::string &filename);
