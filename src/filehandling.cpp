@@ -1,14 +1,11 @@
 #include "../include/filehandling.hpp"
 
-std::vector<std::string> read_file(const std::string &filename)
-{
+std::vector<std::string> read_file(const std::string &filename) {
     std::vector<std::string> dna_sequences;
     std::string line;
     std::ifstream file(filename);
-    if (file.is_open())
-    {
-        while (getline(file, line))
-        {
+    if (file.is_open()) {
+        while (getline(file, line)) {
             dna_sequences.push_back(line);
         }
         file.close();
@@ -18,30 +15,24 @@ std::vector<std::string> read_file(const std::string &filename)
     return dna_sequences;
 }
 
-std::unordered_map<uint16_t, uint16_t> vec_to_dict(std::vector<uint16_t> seqs)
-{
+std::unordered_map<uint16_t, uint16_t> vec_to_dict(std::vector<uint16_t> seqs) {
     std::unordered_map<uint16_t, uint16_t> distribution;
-    for (auto iter = seqs.begin(); iter != seqs.end(); ++iter)
-    {
+    for (auto ptr = seqs.begin(); ptr != seqs.end(); ++ptr) {
         // increment number of ocurences for a specific length of dna suffixes
-        if (distribution.contains(*iter))
-        {
-            distribution[*iter]++;
+        if (distribution.contains(*ptr)) {
+            distribution[*ptr]++;
+        } else {
+            distribution[*ptr] = 1;
         }
-        distribution[*iter] = 1;
     }
     return distribution;
 }
 
-void write_dists_to_file(const std::string &filename, std::unordered_map<uint16_t, uint16_t> dists)
-{
-    std::string input;
+void write_dists_to_file(const std::string &filename, std::unordered_map<uint16_t, uint16_t> dists) {
     std::ofstream file(filename);
 
-    if (file.is_open())
-    {
-        for (const auto &[key, value] : dists)
-        {
+    if (file.is_open()) {
+        for (const auto &[key, value] : dists) {
             file << key << ' ' << value << '\n';
         }
         file.close();
