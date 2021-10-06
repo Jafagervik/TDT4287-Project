@@ -19,6 +19,7 @@ int main(){
     // for each line build tree
     SuffixTree myTree;
     myTree.build_tree(s);
+
     // update vector from tree:
     // free end of suffixTree.
     // repeat.
