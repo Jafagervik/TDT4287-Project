@@ -26,6 +26,6 @@ public:
 private:
     // Public member methods
 public:
-    Node(std::string T) {}
+    SuffixTree(std::string T) {}
     Node *build_suffix_tree();
 };

@@ -21,14 +21,17 @@ std::vector<std::string> read_file(const std::string &filename)
 std::unordered_map<uint16_t, uint16_t> vec_to_dict(std::vector<uint16_t> seqs)
 {
     std::unordered_map<uint16_t, uint16_t> distribution;
-    for (auto iter = seqs.begin(); iter != seqs.end(); ++iter)
+    for (auto ptr = seqs.begin(); ptr != seqs.end(); ++ptr)
     {
         // increment number of ocurences for a specific length of dna suffixes
-        if (distribution.contains(*iter))
+        if (distribution.contains(*ptr))
         {
-            distribution[*iter]++;
+            distribution[*ptr]++;
         }
-        distribution[*iter] = 1;
+        else
+        {
+            distribution[*ptr] = 1;
+        }
     }
     return distribution;
 }
