@@ -1,17 +1,22 @@
-CXX=clang++
-CXXFLAGS=-g -std=c++20 -Wall -pedantic
-BIN=prog
+CXX       := gcc
+CXX_FLAGS := -Wall -Wextra -std=c++20 -ggdb
 
-INC=$(wildcard *.hpp)
-SRC=$(wildcard *.cpp)
-OBJ=$(SRC:%.cpp=%.o)
+BIN     := bin
+SRC     := src
+INCLUDE := include
+LIB     := lib
+LIBRARIES   := 
+EXECUTABLE  := main
 
-all: $(OBJ)
-    $(CXX) -o $(BIN) $^
 
-%.o: %.c
-    $(CXX) $@ -c $<
+all: $(BIN)/$(EXECUTABLE)
+
+run: clean all clear @echo "🚀 Executing..." ./$(BIN)/$(EXECUTABLE)
+
+$(BIN)/$(EXECUTABLE): $(SRC)/*.cpp
+	@echo "🚧 Building..."
+	$(CXX) $(CXX_FLAGS) -I$(INCLUDE) -L$(LIB) $^ -o $@ $(LIBRARIES)
 
 clean:
-    rm -f *.o
-    rm $(BIN)
+	@echo "🧹 Clearing..."
+	-rm $(BIN)/*

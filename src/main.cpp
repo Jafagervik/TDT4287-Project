@@ -1,7 +1,8 @@
 #include <string>
 #include <vector>
+#include <iostream>
 
-constexpr auto a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG";
+// constexpr auto a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG";
 
 std::vector<std::uint16_t> suffix_lengths;
 
@@ -13,6 +14,6 @@ std::vector<std::uint16_t> suffix_lengths;
 
 int main()
 {
-
+    std::cout << "Hello" << std::endl;
     return 0;
 }
