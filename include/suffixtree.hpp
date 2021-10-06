@@ -1,3 +1,6 @@
+#ifndef SuffixTree_H  // Guard
+#define SuffixTree_H
+
 #include <stdint.h>
 
 #include <iostream>
@@ -9,23 +12,32 @@
 #include "./filehandling.hpp"
 #include "./node.hpp"
 
-// I instantly regretted doing this object oriented. we want speed
-
 class SuffixTree {
-    // Private member variabels
    private:
-    Node *root;     // root of the tree
+    std::string T;
+    Node *last_new_node;
+    Node *active_node;
+    uint16_t active_edge;
+    uint16_t active_length;
+    uint16_t remaining_suffix_count;
+    Node *root_end;
+    Node *split_end;
+    uint16_t size;
+    Node *root;
+
+   public:  // public member methods.
+    Node *root;
     uint16_t *end;  // lenght of string T we're building tree for
-
-    // Public member variabels
-   public:
-    // Private member methods
-    // std::vector<uint16_t> suffixes; suffixes::max();
-    uint16_t max_suffix;
-
-   private:
-    // Public member methods
-   public:
-    SuffixTree(std::string T) {}
-    Node *build_suffix_tree();
+    SuffixTree();
+    ~SuffixTree();
+    uint16_t max_suffix(const std::string &a);
+    uint16_t edge_length(const Node *node) { return *node->to - node->from; };
+    bool traverse(Node *current_node);
+    Node *new_node(uint16_t from, uint16_t *to, NodeType is_leaf);
+    void extend_tree(uint16_t pos);
+    Node *walk_dfs(Node *current);
+    void build_tree();
+    // TODO: Maybe add some printing
 };
+
+#endif
