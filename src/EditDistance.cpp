@@ -4,8 +4,6 @@ matrix edit_distance(const std::string &A, const std::string &B) {
     uint16_t m = A.size() - 1;
     uint16_t n = B.size() - 1;
 
-    using matrix = std::vector<std::vector<uint16_t>>;
-
     matrix memo(m, std::vector<uint16_t>(n, 0));
 
     for (int r = 0; r < m; ++r)
@@ -26,7 +24,7 @@ matrix edit_distance(const std::string &A, const std::string &B) {
     return memo;
 }
 
-uint16_t backtrack(const matrix &M, const std::string_view &A, const std::string_view &B) {
+uint16_t backtrack(const matrix &M, const std::string_view A, const std::string_view B) {
     uint16_t r = M.size() - 1;
     uint16_t c = M[0].size() - 1;
 
