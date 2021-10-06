@@ -12,6 +12,8 @@
 #include "./filehandling.hpp"
 #include "./node.hpp"
 
+uint16_t leaf_end = -1;
+
 class SuffixTree {
    private:
     std::string T;
@@ -20,14 +22,12 @@ class SuffixTree {
     uint16_t active_edge;
     uint16_t active_length;
     uint16_t remaining_suffix_count;
-    Node *root_end;
+    uint16_t *root_end;
     Node *split_end;
     uint16_t size;
     Node *root;
 
    public:  // public member methods.
-    Node *root;
-    uint16_t *end;  // lenght of string T we're building tree for
     SuffixTree();
     ~SuffixTree();
     uint16_t max_suffix(const std::string &a);
