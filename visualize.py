@@ -1,15 +1,12 @@
-from os import read
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import colors
-
-from numba import njit
+import numba
 
 
 def read_distribution(filename: str):
     """Read a distribution from a file
     inp: >>> 1 4\n2 5\0
-    out: >>> dict{"1": 4, "2": 5}
+    out: >>> np.array([[1 2] [4 5]])
     """
     lengths, counts = np.loadtxt(filename, delimiter=" ", unpack=True)
     return lengths, counts
@@ -91,4 +88,5 @@ def main():
 
 if __name__ == "__main__":
     print("Hello")
+    print(numba.__version__)
     main()

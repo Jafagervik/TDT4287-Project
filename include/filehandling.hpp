@@ -1,10 +1,11 @@
-#include <iostream>
+#include <stdint.h>
+
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <string_view>
-#include <vector>
-#include <stdint.h>
 #include <unordered_map>
+#include <vector>
 
 std::vector<std::string> read_file(const std::string &filename);
 std::unordered_map<uint16_t, uint16_t> vec_to_dict(std::vector<uint16_t> seqs);

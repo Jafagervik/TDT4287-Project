@@ -1,17 +1,16 @@
+#include <stdint.h>
+
 #include <string>
 #include <utility>
-#include <stdint.h>
 #include <vector>
 
-enum class NodeType
-{
+enum class NodeType {
     ROOT = 0,
     INTERNAL = 1,
     LEAF = 2
 };
 
-struct Node
-{
+struct Node {
     NodeType type;
     std::pair<uint16_t, uint16_t> label;
     uint16_t leaf_index;

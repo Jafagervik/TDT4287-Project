@@ -1,6 +1,6 @@
+#include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
 
 // constexpr auto a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG";
 
@@ -12,8 +12,7 @@ std::vector<std::uint16_t> suffix_lengths;
 
 // visualize in python
 
-int main()
-{
+int main() {
     std::cout << "Hello" << std::endl;
     return 0;
 }
