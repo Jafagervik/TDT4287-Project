@@ -1,3 +1,7 @@
+#include <string>
+#include <vector>
+
+constexpr auto a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG";
 
 std::vector<std::uint16_t> suffix_lengths;
 
@@ -6,3 +10,9 @@ std::vector<std::uint16_t> suffix_lengths;
 // read to file
 
 // visualize in python
+
+int main()
+{
+
+    return 0;
+}
