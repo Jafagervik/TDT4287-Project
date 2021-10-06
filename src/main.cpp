@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-// constexpr auto a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG";
+static constexpr auto a = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG";
 
 std::vector<std::uint16_t> suffix_lengths;
 
