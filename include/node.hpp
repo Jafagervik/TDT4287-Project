@@ -1,8 +1,11 @@
 #include <stdint.h>
 
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
+
+static uint16_t leaf_end = -1;
 
 enum class NodeType {
     ROOT = 0,
@@ -12,19 +15,13 @@ enum class NodeType {
 
 struct Node {
     NodeType type;
-    std::pair<uint16_t, uint16_t> label;
-    uint16_t from;
-    uint16_t *to;
-    uint16_t leaf_index;
+
+    uint16_t start;
+    uint16_t *end;
     Node *suffix_link;
     uint16_t suffix_index;
-    std::vector<Node *>
+    std::unordered_map<char, Node *>
         children;
     Node *parent;
-    *Node(NodeType t, uint16_t from, uint16_t *to) : type(t), label(from, *to), parent(nullptr){};
-    // Root constructor
-    *Node(NodeType t, uint16_t from, uint16_t *to) : type(t), parent(nullptr), suffix_link(nullptr) {
-        this->from = from;
-        this->to = to;
-    }
+
 };
