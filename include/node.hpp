@@ -15,6 +15,7 @@ enum class NodeType {
 
 struct Node {
     NodeType type;
+
     uint16_t start;
     uint16_t *end;
     Node *suffix_link;
@@ -22,4 +23,5 @@ struct Node {
     std::unordered_map<char, Node *>
         children;
     Node *parent;
+
 };

@@ -20,6 +20,7 @@ class SuffixTree {
     std::string T;
     Node *last_new_node;
     Node *active_node;
+
     uint16_t *active_edge;
     uint16_t active_length;
     uint16_t remaining_suffix_count;
@@ -42,6 +43,7 @@ class SuffixTree {
     void build_tree();
 
     std::string::iterator it;
+
     // TODO: Maybe add some printing
 };
 
