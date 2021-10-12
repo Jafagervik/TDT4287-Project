@@ -1,6 +1,6 @@
 #include "../include/EditDistance.hpp"
 
-matrix edit_distance(const std::string &A, const std::string &B) {
+auto edit_distance(const std::string &A, const std::string &B) {
     uint16_t m = A.size() - 1;
     uint16_t n = B.size() - 1;
 
@@ -21,16 +21,42 @@ matrix edit_distance(const std::string &A, const std::string &B) {
         }
     }
 
-    return memo;
+    return memo, memo[m - 1][n - 1];
 }
 
-uint16_t backtrack(const matrix &M, const std::string_view A, const std::string_view B) {
-    uint16_t r = M.size() - 1;
-    uint16_t c = M[0].size() - 1;
+void backtrack(const matrix &memo, const std::string_view A, const std::string_view B) {
+    // TODO: Add some math to this
+    uint16_t m = A.size() - 1;
+    uint16_t n = B.size() - 1;
 
-    while (r > 0 && c > 0) {
+    uint16_t i = m - 1;
+    uint16_t j = n - 1;
+
+    while (i > 0 && j > 0) {
+        if (A[i - 1] == B[j - 1]) {
+            std::cout << "\\";
+            i -= 1;
+            j -= 1;
+        } else if (memo[i][j - 1] > memo[i - 1][j]) {
+            std::cout << "--";
+            j -= 1;
+        } else {
+            std::cout << "|";
+            i -= 1;
+        }
+    }
+
+    if (i == 0) {
+        for (uint16_t a = 0; a < j; ++a)
+            std::cout << "--";
+    }
+
+    if (j == 0) {
+        for (uint16_t b = 0; b < i; ++b)
+            std::cout << "--";
     }
 }
 
-bool allow_mismatch(const matrix &M, const float &mismatch_percentage) {
+bool allow_mismatch(const uint16_t &ed, const uint16_t &num_of_mismatches, const float &mismatch_percentage) {
+    return true ? true : false;
 }
