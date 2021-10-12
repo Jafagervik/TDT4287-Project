@@ -1,50 +1,43 @@
-#ifndef SuffixTree_H  // Guard
-#define SuffixTree_H
+#ifndef SUFFIXTREE_H
+#define SUFFIXTREE_H
 
-#include <stdint.h>
-
-#include <iostream>
 #include <string>
-#include <string_view>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
-#include "./filehandling.hpp"
-#include "./node.hpp"
-
-uint16_t leaf_end = -1;
-
+class Suffix;
+class Node;
 class SuffixTree {
+   public:
+    SuffixTree();
+    void construct(std::string);
+    std::string log_tree();
+    char get_char_at_index(int) const;
+
    private:
-    std::string T;
-    Node *last_new_node;
-    Node *active_node;
+    std::string tree_string;
+    std::string log_node(Node* parent);
+    std::string get_substr(int, int);
+    // Suffix Extension rules (Gusfield, 1997)
+    enum Rule { RULE_2,
+                RULE_3 };
 
-    uint16_t *active_edge;
-    uint16_t active_length;
-    uint16_t remaining_suffix_count;
-    uint16_t *root_end;
-    uint16_t *split_end;
-    uint16_t size;
-    Node *root;
+    // SPA: Single Phase Algorithm (Gusfield, 1997)
+    void SPA(int);
 
-   public:  // public member methods.
-    SuffixTree(std::string &T) : T(T) {}
-    ~SuffixTree();
-    bool traverse(Node *current_node);
-    uint16_t max_suffix(const std::string &a);
-    uint16_t edge_length(const Node *node) {
-        return node->start - *node->end;
-    };
-    Node *new_node(uint16_t from, uint16_t *to, NodeType is_leaf);
-    void extend_tree(uint16_t pos);
-    char walk_dfs(Node *current);
-    void build_tree();
+    // SEA: Single Extension Algorithm (Gusfield, 1997)
+    Rule SEA(Suffix&, int, int);
 
-    std::string::iterator it;
+    // The 'skip/count' trick for traversal (Gusfield, 1997)
+    Suffix get_suffix(Node*, int, int);
 
-    // TODO: Maybe add some printing
+    // Apply Suffix Extension Rule 2 (Gusfield, 1997)
+    void RULE2(Suffix&, int, int);
+
+    Node* root;
+    int internal_node_ID;
+    int length;
+    int* current_end;
+    Node* last_leaf_extension;
 };
 
 #endif

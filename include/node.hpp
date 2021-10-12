@@ -1,27 +1,33 @@
-#include <stdint.h>
 
+#ifndef NODE_H
+#define NODE_H
+
+#include <map>
 #include <string>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
-static uint16_t leaf_end = -1;
+class SuffixTree;
+class Node {
+    friend class SuffixTree;
+    friend class Suffix;
 
-enum class NodeType {
-    ROOT = 0,
-    INTERNAL = 1,
-    LEAF = 2
+   private:
+    Node(Node*, int, int*, int);
+    int edge_length() { return *end_index - begin_index + 1; }
+    void add_child(const SuffixTree&, Node*);
+    void remove_child(const SuffixTree&, Node*);
+    bool is_leaf() { return children.empty(); }
+    void split_edge(const SuffixTree&, int, int);
+    Node* get_child(const SuffixTree&, int char_index);
+    int get_key(const SuffixTree&, Node*, int) const;
+
+    Node* parent;
+    std::map<int, Node*> children;
+    std::vector<int> labels;
+    Node* suffix_link;
+    int begin_index;
+    int* end_index;
+    int ID;
 };
 
-struct Node {
-    NodeType type;
-
-    uint16_t start;
-    uint16_t *end;
-    Node *suffix_link;
-    uint16_t suffix_index;
-    std::unordered_map<char, Node *>
-        children;
-    Node *parent;
-
-};
+#endif

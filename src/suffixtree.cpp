@@ -1,184 +1,148 @@
 #include "../include/SuffixTree.hpp"
 
-#include <iostream>
+#include <map>
+#include <sstream>
 #include <string>
+#include <vector>
 
+#include "../include/Node.hpp"
+#include "../include/Suffix.hpp"
 
-SuffixTree::~SuffixTree() {
-    delete last_new_node;
-    delete active_edge;
-    delete active_node;
-    delete root;
-    delete root_end;
+SuffixTree::SuffixTree() {
+    // Internal node IDs start at zero and decrement. For example, the root node,
+    // which can be considered the first internal node has an ID of 0. The next
+    // internal node has an ID of -1, followed by -2 and so forth.
 
-};
+    // While not neccessary for the algorithm to function, each node having a
+    // unique ID is important when using Graphiz to visualize the structure.
+    internal_node_ID = 0;
 
-/**
- * @brief Calculate longest suffix in tree mathcing with prefixes of a.
- * 
- * @param a 
- * @return uint16_t 
- */
-uint16_t SuffixTree::max_suffix(const std::string &a) {
-    return 69420;
-};
-
-
-uint16_t SuffixTree::edge_length(const Node *node) { return *node->end - node->start; }
-
-
-/**
- * @brief We use Skip/Count for this one
- * 
- * @param current_node 
- * @return true if active_length >= length
- * @return false otherwise 
- */
-bool SuffixTree::traverse(Node *current_node) {
-    uint16_t length = edge_length(current_node);
-    if (active_length >= length) {
-
-        *active_edge += length;
-
-        active_length -= length;
-        active_node = current_node;
-        return true;
-    }
-    return false;
+    current_end = new int(0);
+    root = new Node(NULL, 1, current_end, internal_node_ID);
 }
 
-/**
- * @brief Add a new node to thbe suffix tree.
- * 
- * @param from 
- * @param to 
- * @param is_leaf 
- * @return Node* 
- */
+void SuffixTree::construct(std::string s) {
+    length = s.length();
+    tree_string = s;
 
-Node *SuffixTree::new_node(uint16_t from, uint16_t *to = nullptr, NodeType leaf = NodeType::LEAF) {
-    // TODO: maybe insert parent here?
-    Node *node = new Node();
+    // Construct Implicit Tree I(1).
+    (*current_end)++;
+    last_leaf_extension = new Node(root, 1, current_end, 1);
+    root->add_child(*this, last_leaf_extension);
 
-    node->suffix_link = root;
-    node->start = from;
-    node->end = to;
-
-
-    node->suffix_index = -1;
-    return node;
+    for (int i = 1; i < length; i++)
+        SPA(i);
 }
 
-/**
- * @brief The Big Ukkonen, https://www.youtube.com/watch?v=ByuMPBfyR5g&t=0s
- * 
- * @param pos 
- */
-void SuffixTree::extend_tree(uint16_t pos) {
+// SPA: Single Phase Algorithm (Gusfield, 1997)
+void SuffixTree::SPA(int i) {
+    // Do phase i + 1.
 
-    // Setting global static variable
+    Suffix previous_suffix(last_leaf_extension, *current_end);
 
-    leaf_end = pos;
+    // Increment the current_end pointer: this implicitly applies Rule 1 to all
+    // leaf edges in the tree.
+    (*current_end)++;
 
-    remaining_suffix_count += 1;
-
-    last_new_node = nullptr;
-
-    while (remaining_suffix_count > 0) {
-        if (active_length == 0)
-
-            *active_edge = pos;
-
-        // TODO: instead of vector, store in unordered_map
-        if (active_node->children[T[*active_edge]]) {
-            active_node->children[T[*active_edge]] = new_node(pos, (uint16_t *)pos, NodeType::LEAF);
-            if (last_new_node != nullptr) {
-
-                last_new_node->suffix_link = active_node;
-                last_new_node = nullptr;
-            }
-        } else {
-
-            Node *next = active_node->children[T[*active_edge]];
-            if (walk_dfs(next))
-                continue;
-            if (T[next->start + active_length] == T[pos]) {
-
-                if (last_new_node && active_node != root) {
-                    last_new_node->suffix_link = active_node;
-                    last_new_node = nullptr;
-                }
-                active_length += 1;
-                break;
-            }
-
-            *split_end = next->start + active_length - 1;
-            Node *split = new_node(next->start, next->end);
-            active_node->children[T[pos]] = split;
-            next->start += active_length;
-            split->children[T[next->start]] = next;
-
-            if (last_new_node != nullptr) {
-
-                last_new_node->suffix_link = split;
-            }
-            last_new_node = split;
-        }
-        remaining_suffix_count -= 1;
-
-        if (active_node == root && active_length > 0) {
-            active_length -= 1;
-            *active_edge = pos - remaining_suffix_count + 1;
-
-        } else if (active_node != root)
-            active_node = active_node->suffix_link;
+    // Explicitly compute successive extensions starting at j(i) + 1 where (i)
+    // is the ID of the last leaf extension from the previous phase.
+    for (int j = (last_leaf_extension->ID + 1); j <= i + 1; j++) {
+        Rule rule_applied = SEA(previous_suffix, j, i);
+        if (rule_applied == RULE_3)
+            break;
     }
 }
 
-/**
- * @brief walk down the tree in a dfs manner one node at a time
- * 
- * @param current 
- * @return Node* 
- */
+// SEA: Single Extension Algorithm (Gusfield, 1997)
+SuffixTree::Rule SuffixTree::SEA(Suffix& previous_suffix, int j, int i) {
+    int begin_index, end_index;
+    Node* origin = previous_suffix.walk_up(begin_index, end_index);
+    Suffix suffix = (origin == root ? get_suffix(root, j, i)
+                                    : get_suffix(origin->suffix_link, begin_index, end_index));
 
-
-char SuffixTree::walk_dfs(Node *current) {
-    // TODO: See what to do instead of yielding
-
-    uint16_t start = current->start;
-    uint16_t end = *current->end;
-
-    it = T.substr(start, end - start).begin();
-    // Check if we even have a valid char to walk through
-    if (*it) {
-        // save the char on this node to return
-        char nuc = *it;
-        // Traverse to next nucleotide
-        it = next(it);
-        return nuc;
+    Rule rule_applied;
+    if (suffix.RULE2_conditions(*this, i + 1)) {
+        RULE2(suffix, i + 1, j);
+        rule_applied = RULE_2;
+    } else {
+        rule_applied = RULE_3;
     }
 
-    for (const auto &[nucleotide, node] : current->children) {
-        if (node)
-            walk_dfs(current);
+    if (previous_suffix.new_internal_node)
+        previous_suffix.node->suffix_link = suffix.node;
 
-    }
+    previous_suffix = suffix;
+    return rule_applied;
 }
 
-/**
- * @brief Build the tree initially
- * 
- */
-void SuffixTree::build_tree() {
-    size = T.size();
+// The 'skip/count' trick for suffix tree traversal (Gusfield, 1997)
+Suffix SuffixTree::get_suffix(Node* origin, int begin_index, int end_index) {
+    int char_index = *origin->end_index;
 
-    *root_end = -1;
-    root = new_node(-1, root_end, NodeType::INTERNAL);
+    while (begin_index <= end_index) {
+        origin = origin->get_child(*this, begin_index);
+        if (origin->edge_length() < end_index - begin_index + 1)
+            char_index = *origin->end_index;
+        else
+            char_index = origin->begin_index + (end_index - begin_index);
+        begin_index += origin->edge_length();
+    }
+    return Suffix(origin, char_index);
+}
 
-    // First active node is root
+std::string SuffixTree::get_substr(int start_pos, int end_pos) {
+    if (start_pos > end_pos) return std::string();
+    // This is 1-indexed to match the algorithm's original description in the
+    // paper. For example, "foobar".get_substr(2, 4) == "oob".
+    return tree_string.substr(start_pos - 1, end_pos - start_pos + 1);
+}
 
-    active_node = root;
-    for (int i = 0; i < T.size(); ++i)
-        extend_tree(i);
+char SuffixTree::get_char_at_index(int index) const {
+    // Also 1-indexed. For example, "foobar".get_char_at_index(4) == 'b'
+    return tree_string[index - 1];
+}
+
+void SuffixTree::RULE2(Suffix& suffix, int char_index, int new_leaf_ID) {
+    if (!suffix.ends_at_node()) {  // eg. in case 2 (path ends inside an edge)
+        suffix.node->split_edge(*this, suffix.char_index, --internal_node_ID);
+        suffix.node = suffix.node->parent;
+        suffix.new_internal_node = true;
+    }
+    Node* new_leaf = new Node(suffix.node, char_index, current_end, new_leaf_ID);
+    suffix.node->add_child(*this, new_leaf);
+    last_leaf_extension = new_leaf;
+}
+
+std::string SuffixTree::log_tree() {
+    return "digraph g{\n" + log_node(root) + "}";
+}
+
+std::string SuffixTree::log_node(Node* parent) {
+    std::map<int, Node*>::iterator it = parent->children.begin();
+
+    std::stringstream buffer;
+
+    // Internal nodes (nodes with ID <= 0) are unlabelled points, leaves
+    // (nodes with ID > 0) show the ID as plaintext.
+    buffer << parent->ID << "[shape="
+           << ((parent->ID <= 0) ? "point" : "plaintext") << "];\n";
+
+    for (; it != parent->children.end(); it++) {
+        // Child nodes are stored on the parent node in a map of integers
+        // (it->first) to Node pointers (it->second).
+        Node* child_node = it->second;
+        buffer << parent->ID << "->" << child_node->ID << " [label = \""
+               << get_substr(child_node->begin_index, *(child_node->end_index))
+               << "\"];\n"
+               << log_node(child_node);
+    }
+
+    // Print the suffx link, if there is one.
+    Node* suffix_link = parent->suffix_link;
+    if (suffix_link)
+        buffer << "\"" << parent->ID << "\" -> "
+               << "\""
+               << suffix_link->ID << "\" [style=dashed arrowhead=otriangle];\n";
+
+    return buffer.str();
 }
