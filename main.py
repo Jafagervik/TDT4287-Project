@@ -28,32 +28,28 @@ def string_compare(
     return same_char_at_index / max_len >= (1 - mismatch_percentage)
 
 
-# @njit()
-def read_seq3(filename: str):
-    for line in open(filename, "r"):
-        yield line
+def read_file(filename: str = ".\\data\\s_3_sequence_1M.txt"):
+    with open(filename, "r") as f:
+        return f.readlines()
 
 
-# @njit(parallel=True, fastmath=True)
-def mismatch(mismatch_percentage: float):
-    num_of_sequences = 0
-    allowed_seqs = np.array([])
-
-    gen = next(read_seq3(".\\data\\s_3_sequence_1M.txt"))
+@njit(parallel=True, fastmath=True)
+def mismatch(content, mismatch_percentage: float):
+    # np_content = np.array(content)
+    # num_of_sequences = 0
+    allowed_seqs = []
 
     # FIXME: Handle exception better
-    while gen:
-        for i in range(len(gen)):
+    for line in content:
+        for i in range(len(line)):
             suffix_prefix = string_compare(
-                A[: len(gen) - i], gen[i:], mismatch_percentage
+                A[: len(line) - i], line[i:], mismatch_percentage
             )
             if suffix_prefix:
-                num_of_sequences += 1
-                allowed_seqs.append(gen)
+                # num_of_sequences += 1
+                allowed_seqs.append(line)
                 # We break since we're only interested in longest suffix
                 break
-
-        gen = next(gen)
 
     return allowed_seqs
 
@@ -71,11 +67,13 @@ def make_distribution(array):
 
 
 if __name__ == "__main__":
-    case1 = mismatch(0.0)
+    content = read_file()
+    case1 = mismatch(content, 0.0)
     make_distribution(case1)
+
 ## TEST
 """
-mismatch(0.0)
+mismatch(0.0. )
 mismatch(0.10)
 mismatch(0.25)
 """
