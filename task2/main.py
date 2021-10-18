@@ -3,11 +3,11 @@ import numba
 from numba import njit
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 A = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG"
 
 
-@njit(parallel=True, fastmath=True)
 def string_compare(
     A: str, B: str, mismatch_percentage: float, allow_ins_del: bool = False
 ):
@@ -25,7 +25,8 @@ def string_compare(
         if A[i] == B[i]:
             same_char_at_index += 1
 
-    return same_char_at_index / max_len >= (1 - mismatch_percentage)
+    a = same_char_at_index / max_len
+    return a >= (1.0 - mismatch_percentage)
 
 
 def read_file(filename: str = ".\\data\\s_3_sequence_1M.txt"):
@@ -33,21 +34,21 @@ def read_file(filename: str = ".\\data\\s_3_sequence_1M.txt"):
         return f.readlines()
 
 
-@njit(parallel=True, fastmath=True)
 def mismatch(content, mismatch_percentage: float):
-    # np_content = np.array(content)
-    # num_of_sequences = 0
     allowed_seqs = []
 
     # FIXME: Handle exception better
-    for line in content:
-        for i in range(len(line)):
-            suffix_prefix = string_compare(
-                A[: len(line) - i], line[i:], mismatch_percentage
-            )
+    for line in tqdm(content):
+        line = line.rstrip()
+        l = len(line)
+        for i in range(l):
+            # Match prefix of a with suffix of s or "line" in this instance
+            suffix_prefix = string_compare(A[: l - i], line[i:], mismatch_percentage)
+            print(suffix_prefix)
             if suffix_prefix:
-                # num_of_sequences += 1
-                allowed_seqs.append(line)
+                allowed_seqs.append(
+                    line
+                )  # If one suff / pre match we add the entire line
                 # We break since we're only interested in longest suffix
                 break
 
@@ -60,15 +61,26 @@ def make_bins(size: int):
 
 
 def make_distribution(array):
-    max_size = np.amax(array)
-    bins = make_bins(max_size)
-    plt.hist(array, bins)
-    plt.show()
+    try:
+        max_size = np.amax(array)
+        bins = make_bins(max_size)
+    except ValueError as ve:
+        print(f"Error {ve}: No empty arrays allowed")
+    else:
+        plt.hist(array, bins)
+        plt.show()
 
 
 if __name__ == "__main__":
+    print("Reading file...")
     content = read_file()
+    print("Read file...")
+
+    print("Starting Algorithm")
     case1 = mismatch(content, 0.0)
+    print("Finished Algorithm")
+
+    print("Making distribution...")
     make_distribution(case1)
 
 ## TEST
