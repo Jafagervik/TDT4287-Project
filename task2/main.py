@@ -4,8 +4,7 @@ from numba import njit
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-
-A = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG"
+from helpers import read_file, A
 
 
 def string_compare(
@@ -27,11 +26,6 @@ def string_compare(
 
     a = same_char_at_index / max_len
     return a >= (1.0 - mismatch_percentage)
-
-
-def read_file(filename: str = ".\\data\\s_3_sequence_1M.txt"):
-    with open(filename, "r") as f:
-        return f.readlines()
 
 
 def mismatch(content, mismatch_percentage: float):
