@@ -15,6 +15,7 @@ def read_file(filename):
             break
         else:
             lines.append(line)
+    f.close()
     return lines
 
 def task_one(lines, r_a_tree):
