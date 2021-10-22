@@ -7,12 +7,17 @@ import matplotlib.pyplot as plt
 import time
 from task_1.suffixtree import SuffixTree
 
+# nucleotide number reprentation for Array access.
 A = 0
 T = 1
 G = 2
 C = 3
+
+# thresholds for the heuristic propability adapter sequence matching.
 adapter_threshold = 60
-adapter_suffix_threshold = 25
+adapter_suffix_threshold = 40
+adapter_unique_threshold = 40
+adapter_unique_suffix_threshold=40
 frequent_key_threshold = 10000
 
 # read file and append each result to a file.
@@ -31,8 +36,8 @@ def read_file(filename):
             lines.append(line)
         counter+=1
         # change this to 10 000 for faster debugging. (small dataset)
-        # if counter == 100000:
-        #     break
+        if counter == 10000:
+            break
 
     f.close()
     return lines, longest
@@ -122,6 +127,7 @@ def get_brute_force_results_array(array, length, lines, percentage_threshold):
         if percentage > percentage_threshold:
             # if current percentage is sufficient append current result to string.
             result = result + current_most_likely
+        print("For index: " + str(i) + " most likely is " + current_most_likely + " with a percentage of " + str(percentage))
     return result
 
 def task_four_distribution(lines, r_a_tree, longest):
@@ -133,7 +139,7 @@ def task_four_distribution(lines, r_a_tree, longest):
         r = r_a_tree.matchS(line)
 
         # store length of S after removal of match
-        # all S have a length of 50.
+        # all S have a length of longest.
         s_remaining_length = longest-r
         s = line[:s_remaining_length]
         if not map.__contains__(s):
@@ -237,16 +243,35 @@ def print_hi(name):
     match_fragments_end_time = time.time()
 
     get_frequent_seq_start_time = time.time()
-    higly_frequent_keys = dict(sorted(map.items(), key=lambda item: item[1], reverse=True))
-    counter = 0
+    higly_frequent_sequences = dict(sorted(map.items(), key=lambda item: item[1], reverse=True))
     print("Highly frequent sequences:")
-    for key in higly_frequent_keys.keys():
-        value = higly_frequent_keys[key]
-        print(key + " is occuring " + str(value) + " times.")
-        counter += 1
-        if value < frequent_key_threshold:
-            break
+    f = open("higly_frequent_sequences.csv", "w")
+    f.write("sequence,occurences")
+
+
+    # TASK: Does the set contain any highly frequent sequences; i.e. what is the
+    # frequency distribution of unique sequences in the set?
+    # open and read the file after the appending:
+    longest_unique = 0
+    for key in higly_frequent_sequences.keys():
+        value = higly_frequent_sequences[key]
+        f.write(key + ","+str(value)+"\n")
+        if len(key) > longest_unique:
+            longest_unique = len(key)
+
+
+
+
+    f.close()
     get_frequent_seq_end_time = time.time()
+
+    # TASK:
+    # Does the unique set contain any
+    # other common (proper) suffix patterns?
+    # rerun algorithm on the unique set only.
+    unique_adapt_seq = brute_force_t4(map.items(), longest_unique)
+
+
     print("Frequent key threshold: "+ str(frequent_key_threshold))
     print("\nAdapter threshold: "+ str(adapter_threshold) + "%")
     print("Adater suffix threshold: " + str(adapter_suffix_threshold)+"%")
@@ -254,13 +279,30 @@ def print_hi(name):
     print("Unique sequences: " + str(len(map)))
 
     print("\nTime used in seconds:")
-    print("Read file time:                " + str(read_file_end_time-read_file_start_time))
-    print("Calculate adapt sequence time: " + str(calc_adapt_seq_end_time-calc_adapt_seq_start_time))
-    print("Match fragments time:          " + str(match_fragments_end_time-match_fragments_start_time))
-    print("Get frequent keys time:        " + str(get_frequent_seq_end_time-get_frequent_seq_start_time))
+    print("Read file time:                " + str(read_file_end_time - read_file_start_time))
+    print("Calculate adapt sequence time: " + str(calc_adapt_seq_end_time - calc_adapt_seq_start_time))
+    print("Match fragments time:          " + str(match_fragments_end_time - match_fragments_start_time))
+    print("Get frequent keys time:        " + str(get_frequent_seq_end_time - get_frequent_seq_start_time))
 
+
+    print("\nLikely unique for unique set:"+ unique_adapt_seq)
 
 
 
 if __name__ == '__main__':
     print_hi('YO')
+    # REMAINDING TASKS
+
+    # Does the unique set contain any
+    # other common (proper) suffix patterns? Such additional common suffixes could
+    # indicate bias in the sequencing experiment.
+    #  Reuse algorithm on my new set?
+
+    # Does the set in
+    # s_3_sequence_1M.txt.gz contain additional common suffix patterns?
+    # Same as above
+    #
+    # What
+    # sequence does your algorithm return if you use your algorithm to analyze the files
+    # s_3_sequence_1M.txt.gz and Seqset3.txt.gz?
+    # just use algorithm and see what it returns?
