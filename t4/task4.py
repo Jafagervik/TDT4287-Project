@@ -4,7 +4,7 @@
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 import numpy as np
 import matplotlib.pyplot as plt
-
+import time
 from task_1.suffixtree import SuffixTree
 
 A = 0
@@ -30,6 +30,8 @@ def read_file(filename):
             lines.append(line)
         counter+=1
         # change this to 10 000 for faster debugging. (small dataset)
+        # if counter == 100000:
+        #     break
 
     f.close()
     print("File closed")
@@ -121,15 +123,22 @@ def get_brute_force_results_array(array, length, lines, percentage_threshold):
     return result
 
 def task_four_distribution(lines, r_a_tree, longest):
-    result = [0] * longest # array of fixed size
+    result = [0] * (longest+1) # array of fixed size
     count = 0
+    map = {}
     for line in lines:
         line = line.strip('\n')
         r = r_a_tree.matchS(line)
 
         # store length of S after removal of match
         # all S have a length of 50.
-        s_remaining_length = 50-r
+        s_remaining_length = longest-r
+        s = line[:s_remaining_length]
+        if not map.__contains__(s):
+            map[s] = 1
+        else:
+            map[s] += 1
+
         result[s_remaining_length]+=1
             # print(str(r) + " for line "+ str(count))
 
@@ -150,8 +159,8 @@ def task_four_distribution(lines, r_a_tree, longest):
     fig.savefig("task4.png")
 
     plt.show()
-    print("Total number of perfectly matching fragments: " + str(len(lines)-result[50]))
-    return result
+    #print("Total number of perfectly matching fragments: " + str(len(lines)-result[longest]))
+    return map
 
 def brute_force_t4(lines, longest):
     # test case for troubleshooting:
@@ -209,18 +218,44 @@ def brute_force_t4(lines, longest):
 def remove_adapters_get_distribution():
     pass
 def print_hi(name):
+    read_file_start_time = time.time()
     lines, longest = read_file("../data/tdt4287-unknown-adapter.txt")
+    read_file_end_time = time.time()
+
+    calc_adapt_seq_start_time = time.time()
     adapt_seq = brute_force_t4(lines, longest)
-    print("Most likely adapt sequence")
-    print(adapt_seq)
+    calc_adapt_seq_end_time = time.time()
     # build tree
     radpt_tree = None
     a_reversed = adapt_seq[::-1] + "$"
+    match_fragments_start_time = time.time()
     tree = SuffixTree(a_reversed)
     tree.build_suffix_tree()
-    task_four_distribution(lines, tree, longest)
+    map = task_four_distribution(lines, tree, longest)
+    match_fragments_end_time = time.time()
+
+    get_frequent_seq_start_time = time.time()
+    higly_frequent_keys = dict(sorted(map.items(), key=lambda item: item[1], reverse=True))
+    counter = 0
+    for key in higly_frequent_keys.keys():
+        print(key + " is occuring " + str(higly_frequent_keys[key]) + " times.")
+        counter += 1
+        if counter == 9:
+            break
+    get_frequent_seq_end_time = time.time()
+    print("Adapter threshold: "+ str(adapter_threshold) + "%")
+    print("Adater suffix threshold: " + str(adapter_suffix_threshold)+"%")
+    print("\nMost likely adapt sequence: " + adapt_seq)
+    print("Unique sequences: " + str(len(map)))
+
+    print("\nTime used in seconds:")
+    print("Read file time:                " + str(read_file_end_time-read_file_start_time))
+    print("Calculate adapt sequence time: " + str(calc_adapt_seq_end_time-calc_adapt_seq_start_time))
+    print("Match fragments time:          " + str(match_fragments_end_time-match_fragments_start_time))
+    print("Get frequent keys time:        " + str(get_frequent_seq_end_time-get_frequent_seq_start_time))
+
+
 
 
 if __name__ == '__main__':
     print_hi('YO')
-
