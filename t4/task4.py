@@ -13,6 +13,7 @@ G = 2
 C = 3
 adapter_threshold = 60
 adapter_suffix_threshold = 25
+frequent_key_threshold = 10000
 
 # read file and append each result to a file.
 def read_file(filename):
@@ -34,8 +35,9 @@ def read_file(filename):
         #     break
 
     f.close()
-    print("File closed")
     return lines, longest
+
+
 def adapt_seq_continuation(adapt_seq, longest, lines):
     adapt_length = len(adapt_seq)-1
     # initialize two dim array with 0'es
@@ -237,15 +239,18 @@ def print_hi(name):
     get_frequent_seq_start_time = time.time()
     higly_frequent_keys = dict(sorted(map.items(), key=lambda item: item[1], reverse=True))
     counter = 0
+    print("Highly frequent sequences:")
     for key in higly_frequent_keys.keys():
-        print(key + " is occuring " + str(higly_frequent_keys[key]) + " times.")
+        value = higly_frequent_keys[key]
+        print(key + " is occuring " + str(value) + " times.")
         counter += 1
-        if counter == 9:
+        if value < frequent_key_threshold:
             break
     get_frequent_seq_end_time = time.time()
-    print("Adapter threshold: "+ str(adapter_threshold) + "%")
+    print("Frequent key threshold: "+ str(frequent_key_threshold))
+    print("\nAdapter threshold: "+ str(adapter_threshold) + "%")
     print("Adater suffix threshold: " + str(adapter_suffix_threshold)+"%")
-    print("\nMost likely adapt sequence: " + adapt_seq)
+    print("Most likely adapt sequence: " + adapt_seq)
     print("Unique sequences: " + str(len(map)))
 
     print("\nTime used in seconds:")
