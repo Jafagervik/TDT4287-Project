@@ -5,42 +5,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+from task_1.suffixtree import SuffixTree
 
 A = 0
 T = 1
 G = 2
 C = 3
 adapter_threshold = 60
-adapter_suffix_threshold = 90
-
-def read_file_dict(filename):
-    f = open(filename, 'r')
-    lines = {}
-    nr = 0
-    for l in f:
-        break
-        lines[nr] = l.strip('\n')
-        nr += 1
-        if nr == 2:
-            break
-    f.close()
-    # line1="AGACCGCCTGGGAATACCGGGTGCTGTAGGCTTAGATCGGAAGAGCACACGTCTGAACTCCAGTCACGTAGAGATCTCGTATGCCGTCTTCTGCTTGAA"
-    # line2="ATGTAGGTAAGGGAAGTCGGCAAGCCGGATCCGTAACTTCGGGAGATCGGAAGAGCACACGTCTGAACTCCAGTCACGTAGAGATCTCGTATGCCGTCTTCTGCTTGA"
-    # line3="AAACCGATACCATTACTGAGTAGATCCGAAGAGCA"
-    # line4 ="CGACTCTTAGAAGATCGGAAGAGCACACGTCTGAACTCCAGTCACGTAGAGATCTCGTATGCCGTCTTCTGCTTGAAAAAAAAAAAAGATCGGAAGAGCACACGTCTAAACTCCAGTCAC"
-    # lines[nr] = line1
-    # nr +=1
-    #
-    # lines[nr] = line2
-    # nr +=1
-    #
-    # lines[nr] = line3
-    # nr +=1
-    #
-    # lines[nr] = line4
-    # nr +=1
-    #
-    return lines
+adapter_suffix_threshold = 25
 
 # read file and append each result to a file.
 def read_file(filename):
@@ -58,8 +30,6 @@ def read_file(filename):
             lines.append(line)
         counter+=1
         # change this to 10 000 for faster debugging. (small dataset)
-        #if counter == 10 000:
-        #    break
 
     f.close()
     print("File closed")
@@ -150,9 +120,40 @@ def get_brute_force_results_array(array, length, lines, percentage_threshold):
             result = result + current_most_likely
     return result
 
+def task_four_distribution(lines, r_a_tree, longest):
+    result = [0] * longest # array of fixed size
+    count = 0
+    for line in lines:
+        line = line.strip('\n')
+        r = r_a_tree.matchS(line)
 
-def brute_force():
-    lines, longest = read_file("../data/tdt4287-unknown-adapter.txt")
+        # store length of S after removal of match
+        # all S have a length of 50.
+        s_remaining_length = 50-r
+        result[s_remaining_length]+=1
+            # print(str(r) + " for line "+ str(count))
+
+        count += 1
+
+    # visualize task 1.
+    fig, ax = plt.subplots()
+
+    ax.set(
+        xlabel="Length after match removal",
+        ylabel="Occurences",
+        title="Task 4: Distribution of DNA Sequences",
+    )
+    ax.grid()
+
+    newdata = np.squeeze(result)  # Shape is now: (10, 80)
+    plt.plot(newdata, color='orange', linewidth= 3)  # plotting by columns
+    fig.savefig("task4.png")
+
+    plt.show()
+    print("Total number of perfectly matching fragments: " + str(len(lines)-result[50]))
+    return result
+
+def brute_force_t4(lines, longest):
     # test case for troubleshooting:
     # lines = []
     # lines.append("CCCTAG")
@@ -172,11 +173,20 @@ def brute_force():
     # reads each line into two dim array which notes what nucleotide is at the index.
     # note that the array is filles up from the end. This means that only the longest strings (lenght of array width) will use A[0].
     # e.g :
-    # long string: A G C T A G
-    # short string:      T A G
+    # long string:      A G C T A G
+    # short string:           T A G
+    #                   G C T T A G
     # array:
-    #              0 1 2 3 4 5
-    #                1 1 2 2 2
+    # index             0 1 2 3 4 5
+    #  A counter        1 0 0 0 3 0
+    #  T counter        0 0 1 3 0 0
+    #  G counter        1 1 0 0 0 3
+    #  C counter        0 1 1 0 0 0
+
+    # most likely for
+    # each index:       ? ? ? T A G
+    # unkown values do not have high enough percentage of all hits. Defined in adapt_thresholds on top of file.
+
     for sequence in lines:
         seq_length = len(sequence)
         for i in range(0, seq_length):
@@ -196,10 +206,19 @@ def brute_force():
     adapt_seq = adapt_seq_continuation(adapt_seq_prefix, longest, lines)
     return adapt_seq
 
+def remove_adapters_get_distribution():
+    pass
 def print_hi(name):
-    adapt_seq = brute_force()
+    lines, longest = read_file("../data/tdt4287-unknown-adapter.txt")
+    adapt_seq = brute_force_t4(lines, longest)
     print("Most likely adapt sequence")
     print(adapt_seq)
+    # build tree
+    radpt_tree = None
+    a_reversed = adapt_seq[::-1] + "$"
+    tree = SuffixTree(a_reversed)
+    tree.build_suffix_tree()
+    task_four_distribution(lines, tree, longest)
 
 
 if __name__ == '__main__':
