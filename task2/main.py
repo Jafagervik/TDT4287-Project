@@ -1,5 +1,3 @@
-import logging
-import numba
 from numba import njit
 import numpy as np
 import matplotlib.pyplot as plt
@@ -91,10 +89,11 @@ if __name__ == "__main__":
     print("Finished Algorithm")
 
     print("Making distributions...")
-    make_distribution(case1, "distrib_length_0pc", show=False)
-    make_distribution(case2, "distrib_length_10pc", show=False)
-    make_distribution(case3, "distrib_length_25pc", show=False)
+    make_distribution(case1, "distrib_length_0pc")
+    make_distribution(case2, "distrib_length_10pc")
+    make_distribution(case3, "distrib_length_25pc")
 
-    make_distribution(case1_modification, "distrib_length_0pc_mod", show=False)
-    make_distribution(case2_modification, "distrib_length_10pc_mod", show=False)
-    make_distribution(case3_modification, "distrib_length_25pc_mod", show=False)
+    make_distribution(case1_modification, "distrib_length_0pc_mod")
+    make_distribution(case2_modification, "distrib_length_10pc_mod")
+    make_distribution(case3_modification, "distrib_length_25pc_mod")
+    print("Finished executing tasks...")
