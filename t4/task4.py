@@ -5,7 +5,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import time
-from task_1.suffixtree import SuffixTree
+from suffixtree import SuffixTree
+
 
 # nucleotide number reprentation for Array access.
 A = 0
@@ -16,9 +17,8 @@ C = 3
 # thresholds for the heuristic propability adapter sequence matching.
 adapter_threshold = 60
 adapter_suffix_threshold = 40
-adapter_unique_threshold = 40
-adapter_unique_suffix_threshold=40
-frequent_key_threshold = 10000
+adapter_unique_threshold = 60
+adapter_unique_suffix_threshold = 40
 
 # read file and append each result to a file.
 def read_file(filename):
@@ -34,16 +34,16 @@ def read_file(filename):
             break
         else:
             lines.append(line)
-        counter+=1
+        counter += 1
         # change this to 10 000 for faster debugging. (small dataset)
-        if counter == 10000:
-            break
+        # if counter == 10000:
+        #     break
 
     f.close()
     return lines, longest
 
 
-def adapt_seq_continuation(adapt_seq, longest, lines):
+def adapt_seq_continuation(adapt_seq, longest, lines, suff_threshold):
     adapt_length = len(adapt_seq)-1
     # initialize two dim array with 0'es
     array = [[0 for x in range(4)] for y in range(longest-len(adapt_seq))]
@@ -83,7 +83,6 @@ def adapt_seq_continuation(adapt_seq, longest, lines):
 
                     elif line[char_ptr] == 'T':
                         array[insert_ptr][T]+=1
-
                     elif line[char_ptr] == 'G':
                         array[insert_ptr][G]+=1
                     else:
@@ -92,12 +91,39 @@ def adapt_seq_continuation(adapt_seq, longest, lines):
                 char_ptr+=1
                 # add remainder of string to array.
     # read most likely sufix of the adapter prefix from array
-    result = get_brute_force_results_array(array, longest-len(adapt_seq), lines, adapter_suffix_threshold)
+    result = get_brute_force_results_array(array, longest-len(adapt_seq), lines, suff_threshold, loopBehind=False)
     return adapt_seq + result
 
+# this prints indice and estimated char and its percentage for the index.
+def print_char_results(char_results):
+    i = 0
+    length = len(char_results)
+    index_str = ""
+    char_str = ""
+    perc_str = ""
+    full_string = ""
+    while i < length:
+        c = char_results[i][0]
+        p = round(char_results[i][1], 1)
+        index_str = index_str + "{:>5}".format(str(i))
+        perc_str = perc_str  + "{:>5}".format(p)
+        char_str = char_str  + "{:>5}".format(str(c))
+        i += 1
+        if i % 25 == 0:
+            full_string = full_string + index_str +"\n" + char_str + "\n" + perc_str + "\n\n"
+            index_str = ""
+            perc_str = ""
+            char_str = ""
+
+    full_string = full_string + index_str +"\n" + char_str + "\n" + perc_str + "\n\n"
+
+    print(full_string)
+
+
 # This functions reads the two dimentional array with results for most likely string combinations.
-def get_brute_force_results_array(array, length, lines, percentage_threshold):
+def get_brute_force_results_array(array, length, lines, percentage_threshold, loopBehind):
     result = ""
+    char_result = []
     for i in range(0, length):
         total = 0
         current_most_likely_number = 0
@@ -124,10 +150,29 @@ def get_brute_force_results_array(array, length, lines, percentage_threshold):
         if total != 0:
             percentage = current_most_likely_number/total*100
         # threshold defined on top of file.
-        if percentage > percentage_threshold:
-            # if current percentage is sufficient append current result to string.
-            result = result + current_most_likely
-        print("For index: " + str(i) + " most likely is " + current_most_likely + " with a percentage of " + str(percentage))
+        #print("For index: " + str(i) + " most likely is " + current_most_likely + " with a percentage of " + str(percentage))
+        char_result.append((current_most_likely, percentage))
+
+    # iteration front or from start, with threshold and stop at first below threshold.
+    if(loopBehind == True):
+        # loop from behind.
+        for elem in reversed(char_result):
+
+            perc = elem[1]
+            if( elem[1] > percentage_threshold):
+                result = elem[0] + result
+            else:
+                break
+    else:
+        # loop from front of array.
+        for element in char_result:
+
+            perc = element[1]
+            if(element[1] > percentage_threshold):
+                result = result + element[0]
+            else:
+                break
+    print_char_results(char_result)
     return result
 
 def task_four_distribution(lines, r_a_tree, longest):
@@ -170,22 +215,7 @@ def task_four_distribution(lines, r_a_tree, longest):
     #print("Total number of perfectly matching fragments: " + str(len(lines)-result[longest]))
     return map
 
-def brute_force_t4(lines, longest):
-    # test case for troubleshooting:
-    # lines = []
-    # lines.append("CCCTAG")
-    # lines.append("CCCTAG")
-    # lines.append("CCCTAG")
-    # lines.append("GGGTAG")
-    # lines.append("AAATAG")
-    # lines.append("GGGTAG")
-    # lines.append("AAATAG")
-    # lines.append("GGGTAG")
-    # lines.append("AAATAG")
-    # lines.append("TTTAGC")
-    # lines.append("TAGCA")
-    # longest = 6
-    # two dim array with longest * 4.
+def brute_force_t4(lines, longest, threshold, suffix_threshold):
     array = [[0 for x in range(4)] for y in range(longest)]
     # reads each line into two dim array which notes what nucleotide is at the index.
     # note that the array is filles up from the end. This means that only the longest strings (lenght of array width) will use A[0].
@@ -219,19 +249,21 @@ def brute_force_t4(lines, longest):
                 else:
                     array[longest-seq_length+i][C] += 1
 
-    adapt_seq_prefix = get_brute_force_results_array(array, longest, lines, adapter_threshold)
-    adapt_seq = adapt_seq_continuation(adapt_seq_prefix, longest, lines)
+    adapt_seq = get_brute_force_results_array(array, longest, lines, threshold, loopBehind=True)
+    if(len(adapt_seq) != 0):
+        print("--->Adapter suffix percentages: ")
+        adapt_seq = adapt_seq_continuation(adapt_seq, longest, lines, suffix_threshold)
     return adapt_seq
 
-def remove_adapters_get_distribution():
-    pass
-def print_hi(name):
+def task4_read_unkown_adapt():
+    print("#####tdt4287-unkown-adapter.txt######")
     read_file_start_time = time.time()
     lines, longest = read_file("../data/tdt4287-unknown-adapter.txt")
     read_file_end_time = time.time()
 
     calc_adapt_seq_start_time = time.time()
-    adapt_seq = brute_force_t4(lines, longest)
+    print("Adapter seq percentages")
+    adapt_seq = brute_force_t4(lines, longest, adapter_threshold, adapter_suffix_threshold)
     calc_adapt_seq_end_time = time.time()
     # build tree
     radpt_tree = None
@@ -243,8 +275,7 @@ def print_hi(name):
     match_fragments_end_time = time.time()
 
     get_frequent_seq_start_time = time.time()
-    higly_frequent_sequences = dict(sorted(map.items(), key=lambda item: item[1], reverse=True))
-    print("Highly frequent sequences:")
+    higly_frequent_sequences = dict(sorted(map.items(), key=lambda item: item[1], reverse = True))
     f = open("higly_frequent_sequences.csv", "w")
     f.write("sequence,occurences")
 
@@ -269,14 +300,19 @@ def print_hi(name):
     # Does the unique set contain any
     # other common (proper) suffix patterns?
     # rerun algorithm on the unique set only.
-    unique_adapt_seq = brute_force_t4(map.items(), longest_unique)
-
-
-    print("Frequent key threshold: "+ str(frequent_key_threshold))
     print("\nAdapter threshold: "+ str(adapter_threshold) + "%")
     print("Adater suffix threshold: " + str(adapter_suffix_threshold)+"%")
     print("Most likely adapt sequence: " + adapt_seq)
+
+    print("\nUnique set adapter threshold: "+ str(adapter_unique_threshold) + "%")
+    print("Unique set adater suffix threshold: " + str(adapter_unique_suffix_threshold)+"%")
     print("Unique sequences: " + str(len(map)))
+    print("Adapter match percentages:")
+    unique_adapt_seq = brute_force_t4(map.keys(), longest_unique, adapter_unique_threshold, adapter_unique_suffix_threshold)
+    print("Likely adapter for unique set:"+ unique_adapt_seq)
+    print("______________________________________________")
+
+
 
     print("\nTime used in seconds:")
     print("Read file time:                " + str(read_file_end_time - read_file_start_time))
@@ -285,12 +321,67 @@ def print_hi(name):
     print("Get frequent keys time:        " + str(get_frequent_seq_end_time - get_frequent_seq_start_time))
 
 
-    print("\nLikely unique for unique set:"+ unique_adapt_seq)
+def task4_analyze_set_1M():
+    print("\n\n#####s_3_sequence_1M.txt######")
+    read_file_start_time = time.time()
+    lines, longest = read_file("../data/s_3_sequence_1M.txt")
+    read_file_end_time = time.time()
+
+    calc_adapt_seq_start_time = time.time()
+    adapt_seq = brute_force_t4(lines, longest, adapter_threshold, adapter_suffix_threshold)
+    calc_adapt_seq_end_time = time.time()
+    # build tree
+    a_reversed = adapt_seq[::-1] + "$"
+    match_fragments_start_time = time.time()
+    tree = SuffixTree(a_reversed)
+    tree.build_suffix_tree()
+    map = task_four_distribution(lines, tree, longest)
+    match_fragments_end_time = time.time()
+
+    print("\nAdapter threshold: " + str(adapter_threshold) + "%")
+    print("Adater suffix threshold: " + str(adapter_suffix_threshold) + "%")
+    print("Most likely adapt sequence: " + adapt_seq)
+    print("______________________________________________")
+
+
+
+    print("\nTime used in seconds:")
+    print("Read file time:                " + str(read_file_end_time - read_file_start_time))
+    print("Calculate adapt sequence time: " + str(calc_adapt_seq_end_time - calc_adapt_seq_start_time))
+    print("Match fragments time:          " + str(match_fragments_end_time - match_fragments_start_time))
+
+
+def task4_analyze_seqset3():
+    print("\n\n#####seqset3.txt######")
+    read_file_start_time = time.time()
+    lines, longest = read_file("../data/s_3_sequence_1M.txt")
+    read_file_end_time = time.time()
+
+    calc_adapt_seq_start_time = time.time()
+    adapt_seq = brute_force_t4(lines, longest, adapter_threshold, adapter_suffix_threshold)
+    calc_adapt_seq_end_time = time.time()
+    # build tree
+    a_reversed = adapt_seq[::-1] + "$"
+    match_fragments_start_time = time.time()
+    tree = SuffixTree(a_reversed)
+    tree.build_suffix_tree()
+    map = task_four_distribution(lines, tree, longest)
+    match_fragments_end_time = time.time()
+
+    print("\nAdapter threshold: " + str(adapter_threshold) + "%")
+    print("Adater suffix threshold: " + str(adapter_suffix_threshold) + "%")
+    print("Most likely adapt sequence: " + adapt_seq)
+    print("______________________________________________")
+
+    print("\nTime used in seconds:")
+    print("Read file time:                " + str(read_file_end_time - read_file_start_time))
+    print("Calculate adapt sequence time: " + str(calc_adapt_seq_end_time - calc_adapt_seq_start_time))
+    print("Match fragments time:          " + str(match_fragments_end_time - match_fragments_start_time))
 
 
 
 if __name__ == '__main__':
-    print_hi('YO')
+    task4_read_unkown_adapt()
     # REMAINDING TASKS
 
     # Does the unique set contain any
@@ -306,3 +397,7 @@ if __name__ == '__main__':
     # sequence does your algorithm return if you use your algorithm to analyze the files
     # s_3_sequence_1M.txt.gz and Seqset3.txt.gz?
     # just use algorithm and see what it returns?
+    task4_analyze_set_1M()
+    task4_analyze_seqset3()
+
+
