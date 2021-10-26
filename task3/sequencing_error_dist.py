@@ -80,7 +80,7 @@ def seq_error_per_nucleotide(seqs: list[str], nucleotide: str):
         # Both strings are now of equal length
         for i in range(l):
             # The char in A we are looking at now need
-            if A[i] != seq[i] and A[i] != nucleotide:
+            if A[i] != seq[i] and A[i] == nucleotide:
                 index_errors_per_nuc.append(i)
 
     return np.array(index_errors_per_nuc)
