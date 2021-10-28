@@ -9,15 +9,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from suffix_tree import Tree
-
 from helpers import read_file, A
 
 
 class LCS:
     """Struct for representing an lcs."""
 
-    def __init__(self, label: str, idxs: int, idxe: int):
+    def __init__(self, label: str, idxs: int, idxe: int, line: int = -1):
+        self.line_nr = line  # which line (index) this LCS is in
         self.label = label
         self.start_index = idxs
         self.end_index = idxe

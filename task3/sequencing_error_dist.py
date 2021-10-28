@@ -86,11 +86,6 @@ def seq_error_per_nucleotide(seqs: list[str], nucleotide: str):
     return np.array(index_errors_per_nuc)
 
 
-@njit(fastmath=True)
-def make_bins(size: int):
-    return np.array([i for i in range(size + 1)])
-
-
 def make_distribution(
     seq_errors, nuc: str = None, has_nuc: bool = False, show: bool = False
 ):
@@ -109,7 +104,7 @@ if __name__ == "__main__":
     content = read_file()
     print("Read file...")
 
-    print("Starting Algorithm")
+    print("Starting Algorithm for sequence errors")
     # First of we allow 10% mismatch
     mismatches = mismatch(content, 0.1)
     # Make differne
@@ -118,7 +113,7 @@ if __name__ == "__main__":
     index_errors_t = seq_error_per_nucleotide(mismatches, "T")
     index_errors_c = seq_error_per_nucleotide(mismatches, "C")
     index_errors_g = seq_error_per_nucleotide(mismatches, "G")
-    print("Finished Algorithm")
+    print("Finished Algorithm...")
 
     print("Making distributions...")
     make_distribution(index_errors, show=True)
@@ -126,6 +121,7 @@ if __name__ == "__main__":
     make_distribution(index_errors_t, "T", has_nuc=True)
     make_distribution(index_errors_c, "C", has_nuc=True)
     make_distribution(index_errors_g, "G", has_nuc=True)
+    print("Finished making distributions...")
 
 
 ## TEST

@@ -5,6 +5,7 @@ from tqdm import tqdm
 from helpers import read_file, A
 
 
+@njit(fastmath=True)
 def string_compare(
     A: str, B: str, mismatch_percentage: float, allow_ins_del: bool = False
 ):
@@ -34,9 +35,9 @@ def mismatch(
 ) -> list[str]:
     allowed_seqs = []
 
-    # FIXME: Handle exception better
     for line in tqdm(content):
         line = line.rstrip()  # Remove trailing newline
+        print(f"Line: {line}")
         l = len(line)
         for i in range(l):
             # Match prefix of a with suffix of s or "line" in this instance
@@ -47,6 +48,7 @@ def mismatch(
                     line
                 )  # If one suff / pre match we add the entire line
                 # We break since we're only interested in longest suffix
+                # TODO: Find out if we should only add suff/pre match here or not
                 break
 
     return allowed_seqs
@@ -58,14 +60,12 @@ def make_bins(size: int):
 
 
 def make_distribution(array, filename: str, show: bool = False):
-    try:
-        max_size = np.amax(array)
-        bins = make_bins(max_size)
-    except ValueError as ve:
-        print(f"Error {ve}: No empty arrays allowed")
-    else:
-        plt.hist(array, bins)
-        plt.savefig(f"..\\images\\{filename}.png")
+    assert len(array) < 0, "No empty arrays allowed"
+
+    max_size = np.amax(array)
+    bins = make_bins(max_size)
+    plt.hist(array, bins)
+    plt.savefig(f"..\\images\\{filename}.png")
 
     if show:
         plt.show()
