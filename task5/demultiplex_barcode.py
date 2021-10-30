@@ -6,10 +6,12 @@
 
 # All barcodes have the same length
 
+# FIRST WE TRY TO AVOID DUPLICATES AND DIRECTLY MODIFY LIST
+
 import matplotlib.pyplot as plt
 import numpy as np
 
-from helpers import read_file, A
+from helpers import read_file
 
 
 class LCS:
@@ -22,10 +24,9 @@ class LCS:
         self.end_index = idxe
 
 
-def strip_strings(seqs: list[str], cutoff: int):
-    """Trim down seqs."""
-    for seq in seqs:
-        seq = seq[:cutoff]
+def strip_strings(seqs: list[str], line_index: int, start_index: int):
+    """Trim down lcs in given se1."""
+    seqs[line_index] = seqs[line_index][: start_index + 1]
 
 
 def multi_lcs(seqs: list[str]) -> LCS:
@@ -94,7 +95,7 @@ def identify_barcodes(seqs: list[str]) -> list[str]:
             barcodes.append(lcs.label)
 
         # Remove the lcs found to repeat the process, should remove 3' adapters and fillers before barcode
-        strip_strings(seqs, lcs.start_index)
+        strip_strings(seqs, lcs.line_nr, lcs.start_index)
 
     return barcodes
 
@@ -102,7 +103,7 @@ def identify_barcodes(seqs: list[str]) -> list[str]:
 def num_of_seqs_per_sample(seqs: list[str], barcodes: list[str]):
     """Part 2 - identify how many sequences that were sequenced from each sample."""
     # naive: return len(seqs)
-    # actual: return nun of barcodes found in the tree
+    # 2. how many lines (seqs) share same barcode
     pass
 
 

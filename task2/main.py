@@ -7,27 +7,27 @@ from helpers import read_file, A
 
 @njit(fastmath=True)
 def string_compare(
-    A: str, B: str, mismatch_percentage: float, allow_ins_del: bool = False
+    a_prefix: str, B: str, mismatch_percentage: float, allow_ins_del: bool = False
 ):
     """
     Hamming distance between two strings.
     """
     # TODO: implement insertion deletion
-    if A == B:
+    if a_prefix == B:
         return True
 
-    if not A or not B:
+    if not a_prefix or not B:
         return False
 
-    max_len = max(len(A), len(B))
-    min_len = min(len(A), len(B))
+    # Both strings have same value
+    l = len(a_prefix)
     same_char_at_index = 0
-    for i in range(min_len):
+    for i in range(l):
         if A[i] == B[i]:
             same_char_at_index += 1
 
-    a = same_char_at_index / max_len
-    return a >= (1.0 - mismatch_percentage)
+    match = same_char_at_index / l
+    return match >= (1.0 - mismatch_percentage)
 
 
 def mismatch(
