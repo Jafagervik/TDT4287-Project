@@ -2,7 +2,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from numba import njit
+from numba import njit, prange
 from tqdm import tqdm
 
 
@@ -14,7 +14,10 @@ def read_file(filename: str = "..\\data\\s_3_sequence_1M.txt"):
         return f.readlines()
 
 
-@njit(fastmath=True)
+# ======= TASK 2 =======
+
+
+@njit(fastmath=True, parallel=True)
 def string_compare(
     a_prefix: str, B: str, allow_ins_del: bool = False
 ) -> tuple[bool, bool]:
@@ -32,7 +35,7 @@ def string_compare(
     # Both strings have same value
     l = len(a_prefix)
     same_char_at_index = 0
-    for i in range(l):
+    for i in prange(l):
         if a_prefix[i] == B[i]:
             same_char_at_index += 1
 
@@ -73,7 +76,10 @@ def mismatch(seqs: list[str], allow_ins_del: bool = False) -> list[str]:
     return np.array(allowed_seqs_10), np.array(allowed_seqs_25)
 
 
-@njit(fastmath=True)
+# ======= TASK 3 =======
+
+
+@njit(fastmath=True, parallell=True)
 def seq_error_sequence(seqs: list[str]):
     """
     Array of indexes where sequence error occurs
@@ -86,27 +92,32 @@ def seq_error_sequence(seqs: list[str]):
 
         # We only need to look for the length l since we only look at
         # prefixes of A that have matched
-        for i in range(l):
+        for i in prange(l):
             if A[i] != seq[i]:
                 index_errors.append(i)
 
     return np.array(index_errors)
 
 
-@njit(fastmath=True)
+@njit(fastmath=True, parallel=True)
 def rate_of_seq_error(seqs: list[str]) -> float:
     """
     @param seqs: allowed sequences which passes even though there can be errors
     """
     sequence_error_count = 0
-    for seq in seqs:
-        l = len(seq)
-        # string sequence s and does not matchw with prefix of A
-        if A[:l] != seq:
+    n = len(seqs)
+    for seq in prange(n):
+        # len of current sequence
+        l = len(seqs[seq])
+        # string sequence s and does not match with prefix of A
+        if A[:l] != seqs[seq]:
             sequence_error_count += 1
             # Found error, go to next sequence
 
-    return float(sequence_error_count / len(seqs))
+    return float(sequence_error_count / l)
+
+
+# ======= DISTRIBUTIONS AND PLOTTING =======
 
 
 @njit(fastmath=True)
