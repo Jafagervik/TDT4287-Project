@@ -11,13 +11,13 @@ A = "TGGAATTCTCGGGTGCCAAGGAACTCCAGTCACACAGTGATCTCGTATGCCGTCTTCTGCTTG"
 
 def read_file(filename: str = "..\\data\\s_3_sequence_1M.txt"):
     with open(filename, "r") as f:
-        return f.readlines()
+        return f.read().splitlines()
 
 
 # ======= TASK 2 =======
 
 
-@njit(fastmath=True, parallel=True)
+@njit(fastmath=True)
 def string_compare(
     a_prefix: str, B: str, allow_ins_del: bool = False
 ) -> tuple[bool, bool]:
@@ -35,7 +35,7 @@ def string_compare(
     # Both strings have same value
     l = len(a_prefix)
     same_char_at_index = 0
-    for i in prange(l):
+    for i in range(l):
         if a_prefix[i] == B[i]:
             same_char_at_index += 1
 
@@ -48,7 +48,6 @@ def mismatch(seqs: list[str], allow_ins_del: bool = False) -> list[str]:
     allowed_seqs_25 = []
 
     for line in tqdm(seqs):
-        line = line.rstrip()  # Remove trailing newline
         l = len(line)
         suffix_10_found = False
         suffix_25_found = False
@@ -79,7 +78,7 @@ def mismatch(seqs: list[str], allow_ins_del: bool = False) -> list[str]:
 # ======= TASK 3 =======
 
 
-@njit(fastmath=True, parallell=True)
+@njit(fastmath=True)
 def seq_error_sequence(seqs: list[str]):
     """
     Array of indexes where sequence error occurs
@@ -92,25 +91,24 @@ def seq_error_sequence(seqs: list[str]):
 
         # We only need to look for the length l since we only look at
         # prefixes of A that have matched
-        for i in prange(l):
+        for i in range(l):
             if A[i] != seq[i]:
                 index_errors.append(i)
 
     return np.array(index_errors)
 
 
-@njit(fastmath=True, parallel=True)
+@njit(fastmath=True)
 def rate_of_seq_error(seqs: list[str]) -> float:
     """
     @param seqs: allowed sequences which passes even though there can be errors
     """
     sequence_error_count = 0
-    n = len(seqs)
-    for seq in prange(n):
+    for seq in seqs:
         # len of current sequence
-        l = len(seqs[seq])
+        l = len(seq)
         # string sequence s and does not match with prefix of A
-        if A[:l] != seqs[seq]:
+        if A[:l] != seq:
             sequence_error_count += 1
             # Found error, go to next sequence
 

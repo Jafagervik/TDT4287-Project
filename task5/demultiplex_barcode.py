@@ -10,26 +10,27 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+from numba import njit
+from tqdm import tqdm
+import re
 
-from helpers import read_file
+from collections import Counter
 
-
-class LCS:
-    """Struct for representing an lcs."""
-
-    def __init__(self, label: str, idxs: int, idxe: int, line: int = -1):
-        self.line_nr = line  # which line (index) this LCS is in
-        self.label = label
-        self.start_index = idxs
-        self.end_index = idxe
+BARCODE_LENGTH = 6
 
 
-def strip_strings(seqs: list[str], line_index: int, start_index: int):
-    """Trim down lcs in given se1."""
-    seqs[line_index] = seqs[line_index][: start_index + 1]
+def read_file(filename: str = "..\\data\\MultiplexedSamples.txt"):
+    with open(filename, "r") as f:
+        return f.read().splitlines()
 
 
-def multi_lcs(seqs: list[str]) -> LCS:
+def remove_barcodes(seqs: list[str]):
+    for seq in seqs:
+        seq = seq[: len(seq) - BARCODE_LENGTH]
+
+
+# @njit(fastmath=True)
+def multi_lcs(seqs: list[str]) -> str:
 
     # Determine size of the array
     n = len(seqs)
@@ -38,8 +39,6 @@ def multi_lcs(seqs: list[str]) -> LCS:
     # as reference
     s = seqs[0]
     l = len(s)
-    idxs = -1
-    idxe = -1
     res = ""
 
     for i in range(l):
@@ -62,14 +61,12 @@ def multi_lcs(seqs: list[str]) -> LCS:
             if k + 1 == n and len(res) < len(stem):
                 res = stem
                 idxs = i
-                idxe = j
+                # lines.append(i)
 
-    print(f"LCS: {res}")
-    print(f"Starting at index {idxs} and ending at {idxe}")
-    return LCS(res, idxs, idxe)
+    return res
 
 
-def identify_barcodes(seqs: list[str]) -> list[str]:
+def identify_barcodes(seqs: list[str]) -> tuple[list[str], list[str]]:
     """Part 1 - identify the
     barcodes (3’ adapters) used and thereby how many samples were multiplexed"""
     # Find 3' adapter through most common subseq
@@ -77,53 +74,116 @@ def identify_barcodes(seqs: list[str]) -> list[str]:
     # The remaining suffix is now the barcodes
     barcodes = []
 
+    # have to copy of lines
+    # go thrugh sequences
+    # find lcs ( this will be adapt seq first )
+    # remove lines with adapter completely from list we are iterating over Copy-seqs
+    # remove lcs at end from the same lines we're removing entirely from the other list SEQS
+    copy_seqs = seqs.copy()
+
     # Seqs share same length
-    seq_length = len(seqs[0])
+    # l = len(copy_seqs[0])
+    i = 1
 
     while True:
+        if copy_seqs == []:
+            # TODO: Find barcode more properly
 
-        lcs = multi_lcs(seqs)
-
-        # ROUGH ESTIMATE
-        if lcs.start_index <= int(seq_length / 4):
-            # We've now found all the 3' adapters and the barcodes we were interested in
+            # we can now remove barcodes and put into list
+            for seq in seqs:
+                barcodes.append(seq[-BARCODE_LENGTH:])
+                seq = seq[: len(seq) - BARCODE_LENGTH]
             break
 
-        # From the information of the task we know that the length is in range [4,8]
-        # Barcodes should now also be at the end since we've removed 3' adapters and fillers
-        if 4 <= len(lcs.label) <= 8 and lcs.end_index == seq_length - 1:
-            barcodes.append(lcs.label)
+        lcs = multi_lcs(copy_seqs)
 
-        # Remove the lcs found to repeat the process, should remove 3' adapters and fillers before barcode
-        strip_strings(seqs, lcs.line_nr, lcs.start_index)
+        if not lcs:
+            break
 
-    return barcodes
+        indexes_to_pop = []
+        for line, seq in tqdm(enumerate(copy_seqs)):
+            # If end of each sequence contains lcs, remove
+            # TODO: go over indexing here
+            start_index = seq.find(lcs)
+            if start_index != -1:
+                # trim end from seqs
+                seqs[line] = seq[: start_index + 1]
+                # remove line entirely from the list we're iterating over
+                indexes_to_pop.append(line)
+
+        copy_seqs = [s for idx, s in enumerate(copy_seqs) if idx not in indexes_to_pop]
+
+    return barcodes, seqs
 
 
-def num_of_seqs_per_sample(seqs: list[str], barcodes: list[str]):
+def num_of_seqs_per_sample(barcodes: list[str]):
     """Part 2 - identify how many sequences that were sequenced from each sample."""
     # naive: return len(seqs)
     # 2. how many lines (seqs) share same barcode
-    pass
+
+    for key, value in Counter(barcodes).items():
+        print(key, value)
 
 
-def seq_length_dist():
+def seq_length_dist(seqs: list[str], barcode: str) -> list[int]:
     """Part 3 - identify
     the sequence length distribution within each sample."""
-    # Look through each
-    pass
+    # most_common_barcode = Counter(barcodes).most_common(1)
+    # unique_barcodes = set(barcodes)
+
+    length_dist = []
+
+    for seq in seqs:
+        l = len(seq)
+        # print(f"{seq[- BARCODE_LENGTH:]} vs {bc}")
+        if seq[-BARCODE_LENGTH:] == barcode:
+            length_dist.append(l - BARCODE_LENGTH)
+
+    return length_dist
 
 
-def make_distribution(seqs: list[str], show: bool = False):
-    plt.hist(seqs, bins=np.arange(seqs.min(), seqs.max() + 1), align="left")
-    plt.savefig(f"..\\images\\task5_seq_length_dist.png")
+def insertions_per_bc(seqs: list[str], barcode: str) -> list[str]:
+    insertions = []
+    for seq in seqs:
+        l = len(seq)
+        insertion = seq[: l - BARCODE_LENGTH]
+        if seq[-BARCODE_LENGTH:] == barcode:
+            insertions.append(insertion)
+
+    return insertions
+
+
+def make_distribution(dist: list[str], barcode: str, show: bool = False):
+    plt.hist(dist, bins=np.arange(dist.min(), dist.max() + 1), align="left")
+    plt.xlabel("Insertion length")
+    plt.ylabel("Frequency")
+    plt.title(f"Length distribution for barcode {barcode}")
+    plt.savefig(f"..\\images\\task5_seq_length_dist_bc{barcode}.png")
 
     if show:
         plt.show()
 
 
-if __name__ == "__maim__":
-    seqs = read_file("../data/MultiplexedSamples.txt")[:1000]
-    barcodes = identify_barcodes(seqs)
-    print(f"We have {len(barcodes)} barcodes.")
-    seqs_per_sample = num_of_seqs_per_sample(seqs, barcodes)
+if __name__ == "__main__":
+    seqs = read_file("../data/MultiplexedSamples.txt")
+    barcodes, seqs = identify_barcodes(seqs)
+
+    # Part 1
+    print(f"We have {len(set(barcodes))} barcodes")
+
+    # Part 2
+    seqs_per_sample = num_of_seqs_per_sample(barcodes)
+    print("PART 2")
+
+    # Part 3 - find seqs
+    remove_barcodes(seqs)
+
+    for bc in set(barcodes):
+        dist = seq_length_dist(seqs, bc)
+        # print(f"dist: {dist}")
+        make_distribution(np.array(dist), bc)
+
+        insertions_for_bc = insertions_per_bc(seqs, bc)
+
+        most_common = Counter(insertions_for_bc).most_common(1)
+        print(f"Most common insertion for barcode {bc} is {most_common}")
