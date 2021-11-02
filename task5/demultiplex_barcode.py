@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numba import njit
 from tqdm import tqdm
-import re
 
 from collections import Counter
 
@@ -165,7 +164,7 @@ def make_distribution(dist: list[str], barcode: str, show: bool = False):
 
 
 if __name__ == "__main__":
-    seqs = read_file("../data/MultiplexedSamples.txt")
+    seqs = read_file("../data/MultiplexedSamples.txt")[:1000]
     barcodes, seqs = identify_barcodes(seqs)
 
     # Part 1
